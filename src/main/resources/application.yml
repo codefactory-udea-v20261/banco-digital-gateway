@@ -1,0 +1,106 @@
+spring:
+  application:
+    name: banco-digital-gateway
+  profiles:
+    active: ${APP_PROFILE:local}
+
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200}
+            allowedMethods: GET,POST,PUT,DELETE,OPTIONS
+            allowedHeaders: '*'
+            maxAge: 3600
+
+    discovery:
+      client:
+        serviceIdToZoneMapping:
+          identity-service: default
+          core-banking-service: default
+          audit-service: default
+          reporting-service: default
+
+    loadbalancer:
+      ribbon:
+        enabled: false
+
+  # Eureka Discovery
+  eureka:
+    client:
+      serviceUrl:
+        defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+      registerWithEureka: false
+      fetchRegistry: true
+    instance:
+      preferIpAddress: true
+
+server:
+  port: ${PORT:${APP_PORT:8000}}
+  servlet:
+    context-path: /
+  error:
+    include-message: never
+    include-stacktrace: never
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Tracing Configuration
+spring.zipkin:
+  base-url: ${ZIPKIN_URL:http://localhost:9411/}
+  enabled: true
+spring.sleuth:
+  sampler:
+    probability: 1.0
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      identity-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2000
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5000
+        eventConsumerBufferSize: 10
+      core-banking-service:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+
+  ratelimiter:
+    instances:
+      api-rate-limit:
+        registerHealthIndicator: false
+        limitRefreshPeriod: 1m
+        limitForPeriod: 100
+        timeoutDuration: 5s
+
+# JWT Configuration
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:dev_secret_replace_in_prod_must_be_256bits}
+      expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200}

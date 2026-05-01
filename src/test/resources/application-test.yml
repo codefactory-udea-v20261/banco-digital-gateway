@@ -1,0 +1,24 @@
+spring:
+  cloud:
+    discovery:
+      enabled: false
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+app:
+  security:
+    jwt:
+      secret: dGVzdF9zZWNyZXRfcmVwbGFjZV9pbl9wcm9kX3dpdGhfMjU2Yml0cw==
+      expiration-ms: 3600000
+
+server:
+  port: 8000
+  error:
+    include-message: never
+    include-stacktrace: never
+
+logging:
+  level:
+    com.udea.bancodigital.gateway: DEBUG
