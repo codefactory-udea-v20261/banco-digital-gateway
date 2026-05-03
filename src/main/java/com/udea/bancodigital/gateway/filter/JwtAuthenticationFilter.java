@@ -27,6 +27,8 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             "/api/v1/auth/login",
             "/api/v1/auth/register",
+            "/api/v1/internal/users/provision-client-access",
+            "/api/v1/internal/users/exists",
             "/api/v1/health",
             "/swagger-ui.html",
             "/api-docs"

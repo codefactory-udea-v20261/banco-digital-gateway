@@ -4,6 +4,11 @@ spring:
   profiles:
     active: ${APP_PROFILE:local}
 
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
   cloud:
     gateway:
       default-filters:
@@ -28,15 +33,15 @@ spring:
       ribbon:
         enabled: false
 
-  # Eureka Discovery
-  eureka:
-    client:
-      serviceUrl:
-        defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}
-      registerWithEureka: false
-      fetchRegistry: true
-    instance:
-      preferIpAddress: true
+# Eureka Discovery
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}
+    registerWithEureka: true
+    fetchRegistry: true
+  instance:
+    preferIpAddress: true
 
 server:
   port: ${PORT:${APP_PORT:8000}}

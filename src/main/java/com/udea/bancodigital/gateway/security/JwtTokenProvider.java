@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -49,6 +50,12 @@ public class JwtTokenProvider {
     }
 
     public String extractRole(Claims claims) {
+        // Map roles list to a single primary role string if that's what Gateway expects,
+        // or just return the first one. Identity service puts them in "roles" (list).
+        Object rolesObj = claims.get("roles");
+        if (rolesObj instanceof List<?> roles && !roles.isEmpty()) {
+            return roles.get(0).toString();
+        }
         return (String) claims.get("role");
     }
 }
