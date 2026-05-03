@@ -1,15 +1,27 @@
 package com.udea.bancodigital.gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpMethod;
 
 @Configuration
-@Profile("!prod")
-public class GatewayRouteConfig {
+@Profile("prod")
+public class GatewayProdRouteConfig {
+
+    @Value("${IDENTITY_SERVICE_URL:http://localhost:8081}")
+    private String identityServiceUrl;
+
+    @Value("${CORE_BANKING_SERVICE_URL:http://localhost:8080}")
+    private String coreBankingServiceUrl;
+
+    @Value("${AUDIT_SERVICE_URL:http://localhost:8082}")
+    private String auditServiceUrl;
+
+    @Value("${REPORTING_SERVICE_URL:http://localhost:8083}")
+    private String reportingServiceUrl;
 
     @Bean
     public RouteLocator routeLocator(RouteLocatorBuilder builder) {
@@ -17,41 +29,41 @@ public class GatewayRouteConfig {
                 // Identity Service Routes
                 .route("identity-service", r -> r
                         .path("/api/v1/auth/**")
-                        .uri("lb://IDENTITY-SERVICE")
+                        .uri(identityServiceUrl)
                 )
                 .route("identity-internal", r -> r
                         .path("/api/v1/internal/users/**")
-                        .uri("lb://IDENTITY-SERVICE")
+                        .uri(identityServiceUrl)
                 )
 
                 // Core Banking Service Routes
                 .route("core-banking-customers", r -> r
                         .path("/api/v1/clientes/**")
-                        .uri("lb://CORE-BANKING-SERVICE")
+                        .uri(coreBankingServiceUrl)
                 )
                 .route("core-banking-accounts", r -> r
                         .path("/api/v1/cuentas/**")
-                        .uri("lb://CORE-BANKING-SERVICE")
+                        .uri(coreBankingServiceUrl)
                 )
                 .route("core-banking-transactions", r -> r
                         .path("/api/v1/transacciones/**")
-                        .uri("lb://CORE-BANKING-SERVICE")
+                        .uri(coreBankingServiceUrl)
                 )
                 .route("core-banking-transfers", r -> r
                         .path("/api/v1/transferencias/**")
-                        .uri("lb://CORE-BANKING-SERVICE")
+                        .uri(coreBankingServiceUrl)
                 )
 
                 // Audit Service Routes
                 .route("audit-service", r -> r
                         .path("/api/v1/audit/**")
-                        .uri("lb://AUDIT-SERVICE")
+                        .uri(auditServiceUrl)
                 )
 
                 // Reporting Service Routes
                 .route("reporting-service", r -> r
                         .path("/api/v1/reportes/**")
-                        .uri("lb://REPORTING-SERVICE")
+                        .uri(reportingServiceUrl)
                 )
 
                 .build();

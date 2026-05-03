@@ -22,6 +22,14 @@ spring:
           uri: ${REPORTING_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/v1/reportes/**,/api/v1/reports/**
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: 6379
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
 
 # Disable Eureka for Cloud Run (use direct URLs above)
 eureka:
@@ -30,12 +38,25 @@ eureka:
     registerWithEureka: false
     fetchRegistry: false
 
+# Cloud Run uses PORT env var (8080)
+server:
+  port: ${PORT:8080}
+
+# Disable Vault health indicator
+management:
+  health:
+    vault:
+      enabled: false
+
+# Disable Zipkin
+spring.zipkin:
+  enabled: false
+
 logging:
   level:
     root: WARN
     com.udea.bancodigital: INFO
 
-server:
-  error:
-    include-message: never
-    include-stacktrace: never
+server.error:
+  include-message: never
+  include-stacktrace: never
