@@ -48,9 +48,13 @@ management:
     vault:
       enabled: false
 
-# Disable Zipkin
+# Disable Zipkin/tracing
 spring.zipkin:
   enabled: false
+management.tracing:
+  enabled: false
+  sampling:
+    probability: 0
 
 logging:
   level:
