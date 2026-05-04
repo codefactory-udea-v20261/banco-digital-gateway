@@ -33,6 +33,7 @@ jobs:
           GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          IDENTITY_SERVICE_URL: ${{ secrets.IDENTITY_SERVICE_URL }}
         run: |
           required=(
             GCP_PROJECT_ID
@@ -40,6 +41,7 @@ jobs:
             GCP_WORKLOAD_IDENTITY_PROVIDER
             GCP_SERVICE_ACCOUNT
             JWT_SECRET
+            IDENTITY_SERVICE_URL
           )
           for name in "${required[@]}"; do
             if [ -z "${!name}" ]; then
@@ -80,6 +82,8 @@ jobs:
             --allow-unauthenticated
           env_vars: |
             APP_PROFILE=prod
+            SPRING_PROFILES_ACTIVE=prod
+            SPRING_CLOUD_VAULT_ENABLED=false
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             IDENTITY_SERVICE_URL=${{ secrets.IDENTITY_SERVICE_URL }}
             CORE_BANKING_SERVICE_URL=${{ secrets.CORE_BANKING_SERVICE_URL }}
@@ -94,13 +98,13 @@ jobs:
             exit 1
           fi
 
-          for i in 1 2 3 4 5; do
+          for i in 1 2 3 4 5 6; do
             if curl -fsS "${url}/actuator/health" >/dev/null; then
               echo "Health check OK: ${url}/actuator/health"
               exit 0
             fi
-            echo "Health check retry ${i}/5..."
-            sleep 10
+            echo "Health check retry ${i}/6..."
+            sleep 15
           done
 
           echo "Health check failed for ${url}/actuator/health"
