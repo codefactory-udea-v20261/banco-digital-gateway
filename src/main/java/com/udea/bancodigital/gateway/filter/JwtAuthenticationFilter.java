@@ -1,8 +1,7 @@
 package com.udea.bancodigital.gateway.filter;
 
-import com.udea.bancodigital.gateway.security.JwtTokenProvider;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
+import com.udea.bancodigital.gateway.security.IdentityServiceClient;
+import com.udea.bancodigital.gateway.security.TokenValidationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -17,12 +16,13 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final IdentityServiceClient identityServiceClient;
 
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             "/api/v1/auth/login",
@@ -34,9 +34,9 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             "/api-docs"
     );
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    public JwtAuthenticationFilter(IdentityServiceClient identityServiceClient) {
         super(Config.class);
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.identityServiceClient = identityServiceClient;
     }
 
     @Override
@@ -48,36 +48,45 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
                 return chain.filter(exchange);
             }
 
-            try {
-                String token = extractToken(exchange);
-                if (token == null) {
-                    return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
-                }
-
-                Claims claims = jwtTokenProvider.validateToken(token);
-
-                if (jwtTokenProvider.isTokenExpired(claims)) {
-                    return onError(exchange, "Token expired", HttpStatus.UNAUTHORIZED);
-                }
-
-                String userId = jwtTokenProvider.extractSubject(claims);
-                String role = jwtTokenProvider.extractRole(claims);
-
-                exchange.getAttributes().put("userId", userId);
-                exchange.getAttributes().put("role", role);
-                exchange.getAttributes().put("claims", claims);
-
-                log.info("JWT validated for user: {} with role: {}", userId, role);
-
-            } catch (JwtException e) {
-                return onError(exchange, "Invalid token: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
-            } catch (Exception e) {
-                log.error("JWT validation error: {}", e.getMessage());
-                return onError(exchange, "Token validation failed", HttpStatus.INTERNAL_SERVER_ERROR);
+            String token = extractToken(exchange);
+            if (token == null) {
+                return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
             }
 
-            return chain.filter(exchange);
+            return identityServiceClient.validateToken(token)
+                    .flatMap(validation -> authorize(exchange, chain, validation))
+                    .onErrorResume(ex -> {
+                        log.error("Token validation error: {}", ex.getMessage(), ex);
+                        return onError(exchange, "Token validation failed", HttpStatus.INTERNAL_SERVER_ERROR);
+                    });
         };
+    }
+
+    private Mono<Void> authorize(
+            ServerWebExchange exchange,
+            org.springframework.cloud.gateway.filter.GatewayFilterChain chain,
+            TokenValidationResponse validation
+    ) {
+        if (validation == null || !validation.isActive()) {
+            return onError(exchange, "Invalid token", HttpStatus.UNAUTHORIZED);
+        }
+
+        String userId = validation.getUid() != null ? validation.getUid() : validation.getSub();
+        String role = Optional.ofNullable(validation.getAuthorities())
+                .orElse(List.of())
+                .stream()
+                .filter(authority -> authority.startsWith("ROLE_"))
+                .findFirst()
+                .orElse(null);
+
+        exchange.getAttributes().put("userId", userId);
+        exchange.getAttributes().put("role", role);
+        exchange.getAttributes().put("subject", validation.getSub());
+        exchange.getAttributes().put("authorities", validation.getAuthorities());
+        exchange.getAttributes().put("clienteId", validation.getClienteId());
+
+        log.info("Token validated by identity service for user: {}", userId);
+        return chain.filter(exchange);
     }
 
     private String extractToken(ServerWebExchange exchange) {
