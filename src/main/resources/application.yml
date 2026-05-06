@@ -65,6 +65,18 @@ management:
       prometheus:
         enabled: true
 
+# SpringDoc OpenAPI / Swagger Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    display-request-duration: true
+    doc-expansion: list
+    show-extensions: true
+  show-actuator: true
+  
 # Tracing Configuration
 spring.zipkin:
   base-url: ${ZIPKIN_URL:http://localhost:9411/}
