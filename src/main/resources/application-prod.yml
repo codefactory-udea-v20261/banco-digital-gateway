@@ -31,13 +31,6 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
 
-# Disable Eureka for Cloud Run (use direct URLs above)
-eureka:
-  client:
-    enabled: false
-    registerWithEureka: false
-    fetchRegistry: false
-
 # Cloud Run uses PORT env var (8080)
 server:
   port: ${PORT:8080}

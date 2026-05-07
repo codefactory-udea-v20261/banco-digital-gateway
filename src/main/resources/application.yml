@@ -33,16 +33,6 @@ spring:
       ribbon:
         enabled: false
 
-# Eureka Discovery
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: ${EUREKA_URL:http://eureka-server:8761/eureka/}
-    registerWithEureka: true
-    fetchRegistry: true
-  instance:
-    preferIpAddress: true
-
 server:
   port: ${PORT:${APP_PORT:8000}}
   servlet:
