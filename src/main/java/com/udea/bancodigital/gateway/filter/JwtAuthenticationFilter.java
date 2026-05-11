@@ -30,8 +30,10 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             "/api/v1/internal/users/provision-client-access",
             "/api/v1/internal/users/exists",
             "/api/v1/health",
-            "/swagger-ui.html",
-            "/api-docs"
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/api-docs",
+            "/webjars/swagger-ui"
     );
 
     public JwtAuthenticationFilter(IdentityServiceClient identityServiceClient) {
@@ -98,7 +100,10 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     private boolean isPublicEndpoint(String path) {
-        return PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith);
+        return PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith) || 
+               path.endsWith("/api-docs") || 
+               path.contains("/swagger-ui/") || 
+               path.endsWith("/swagger-ui.html");
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {

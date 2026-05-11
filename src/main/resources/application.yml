@@ -35,8 +35,6 @@ spring:
 
 server:
   port: ${PORT:${APP_PORT:8000}}
-  servlet:
-    context-path: /
   error:
     include-message: never
     include-stacktrace: never
@@ -60,11 +58,21 @@ springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html
     enabled: true
     display-request-duration: true
     doc-expansion: list
     show-extensions: true
+    urls:
+      - name: 0. API Gateway
+        url: /v3/api-docs
+      - name: 1. Identity Service
+        url: /api/v1/auth/api-docs
+      - name: 2. Core Banking
+        url: /api/v1/clientes/api-docs
+      - name: 3. Audit Service
+        url: /api/v1/audit/api-docs
+      - name: 4. Reporting Service
+        url: /api/v1/reportes/api-docs
   show-actuator: true
   
 # Tracing Configuration
@@ -109,4 +117,10 @@ app:
 
 services:
   identity:
-    url: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+    url: ${IDENTITY_SERVICE_URL:http://identity:8080}
+  core-banking:
+    url: ${CORE_BANKING_SERVICE_URL:http://core-banking:8080}
+  audit:
+    url: ${AUDIT_SERVICE_URL:http://audit:8080}
+  reporting:
+    url: ${REPORTING_SERVICE_URL:http://reporting:8080}
