@@ -100,9 +100,11 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     private boolean isPublicEndpoint(String path) {
-        return PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith) || 
-               path.endsWith("/api-docs") || 
-               path.contains("/swagger-ui/") || 
+        return PUBLIC_ENDPOINTS.stream().anyMatch(path::startsWith) ||
+               path.startsWith("/actuator/health") ||
+               path.startsWith("/actuator/prometheus") ||
+               path.endsWith("/api-docs") ||
+               path.contains("/swagger-ui/") ||
                path.endsWith("/swagger-ui.html");
     }
 
